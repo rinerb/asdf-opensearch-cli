@@ -72,6 +72,8 @@ download_release() {
   local arch
   local url
   local file_ext
+  local url_filename
+  local version_parts
 
   version="$1"
   filename="$2"
@@ -83,7 +85,16 @@ download_release() {
     file_ext="pkg"
   fi
 
-  url="${GH_REPO}/releases/download/${version}/opensearch-cli-${version}-${platform}-${arch}.${file_ext}"
+  url_filename="opensearch-cli-${version}-${platform}-${arch}.${file_ext}"
+
+  readarray -td. version_parts <<<"${version}"
+
+  # opensearch-cli release 1.2.0 started prepending the GitHub release with "v"
+  if [[ "${version_parts[0]}" -gt 1 || ("${version_parts[0]}" -eq 1 && "${version_parts[1]}" -gt 1) ]] ; then
+    version="v${version}"
+  fi
+
+  url="${GH_REPO}/releases/download/${version}/${url_filename}"
   echo "* Downloading ${TOOL_NAME} release ${version}..."
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download ${url}"
 }
